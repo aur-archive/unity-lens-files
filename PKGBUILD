@@ -1,0 +1,55 @@
+# Maintainer: Charles Bos <charlesbos1 AT gmail>
+# Contributor: Xiao-Long Chen <chenxiaolong@cxl.epac.to>
+# Contributor: György Balló <ballogy@freestart.hu>
+# Contributor: thn81 <root@scrat>
+
+pkgname=unity-lens-files
+_actual_ver=7.1.0
+_extra_ver=+13.10.20130920
+_source_date=20130920
+_translations=20130418
+pkgver=${_actual_ver}.${_source_date}
+pkgrel=2
+pkgdesc="A daemon exposing your files and file history to Unity"
+arch=('i686' 'x86_64')
+url="https://launchpad.net/unity-place-files"
+license=('GPL')
+depends=('zeitgeist-ubuntu' 'libunity' 'libxdg-basedir' 'xdg-user-dirs' 'pyxdg' 'dconf')
+makedepends=('vala' 'intltool')
+groups=('unity')
+install=${pkgname}.install
+source=("https://launchpad.net/ubuntu/+archive/primary/+files/unity-lens-files_${_actual_ver}${_extra_ver}.orig.tar.gz"
+        "https://dl.dropboxusercontent.com/u/486665/Translations/translations-${_translations}-unity-lens-files.tar.gz")
+sha512sums=('88e8cd2e3051bb1ca26b1ff135fc7735c401d59f42625446bbfb66d1a4d39b8d9ef0a7bfe1e20d2ca78655cac100a4820b1b63f9c7dd39374403869ebe459d7f'
+            'b3efd04b48ebbdbc61c50e47ee2cb3bb59627c2878dcd6c710d4461e4780d3f5c7ee8fe7c18f060eee519773c38cc21506f500e4d7b5315e80f7577f8c40a359')
+
+prepare() {
+  cd "${srcdir}/${pkgname}-${_actual_ver}${_extra_ver}"
+
+  msg "Merging translations from ${_translations}"
+  rm -f po/LINGUAS po/*.pot
+  mv "${srcdir}"/po/*.pot po/
+  for i in "${srcdir}"/po/*.po; do
+    FILE=$(sed -n "s|.*/${pkgname}-||p" <<< ${i})
+    mv ${i} po/${FILE}
+    echo ${FILE%.*} >> po/LINGUAS
+  done
+}
+
+build() {
+  cd "${srcdir}/${pkgname}-${_actual_ver}${_extra_ver}"
+
+  aclocal --install --force
+  autoreconf -vfi
+  intltoolize -f
+  ./configure --prefix=/usr --libexecdir=/usr/lib/${pkgname} --disable-static
+  make
+}
+
+package() {
+  cd "${srcdir}/${pkgname}-${_actual_ver}${_extra_ver}"
+
+  make DESTDIR="${pkgdir}/" install
+}
+
+# vim:set ts=2 sw=2 et:
